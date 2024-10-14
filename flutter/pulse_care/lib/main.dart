@@ -1,23 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:pulse_care/screens/screens.dart';
-import 'package:pulse_care/theme/app_theme.dart';
+import 'package:go_router/go_router.dart';
+import 'package:pulse_care/api/mock_api.dart';
+import 'package:pulse_care/components/theme/theme.dart';
+import 'package:pulse_care/features/add_lab_request/add_lab_request_scree.dart';
+import 'package:pulse_care/features/lab_request_list/lab_request_list_screen.dart';
+import 'package:pulse_care/features/lab_test_list/lab_test_list.dart';
 
-import 'components/components.dart';
+import 'features/view_lab_test_request/view_lab_test_request_screen.dart';
 
 void main() {
   runApp(const MainApp());
-}
-
-class User {
-  final String firstName;
-  final String lastName;
-  final String? photoUrl;
-
-  const User({
-    required this.firstName,
-    required this.lastName,
-    this.photoUrl,
-  });
 }
 
 class MainApp extends StatelessWidget {
@@ -25,9 +17,63 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: AppTheme.theme,
-      home: const AppointmentDashboardScreen(),
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      theme: const AppTheme().dark(),
+      routerConfig: AppRouter().router,
     );
   }
+}
+
+final class AppRouter {
+  static const home = '/home';
+  static const labRequestList = '/lab-request-list';
+  static const addRequest = '/add-request';
+  static String viewRequest(String id) => '$labRequestList/$id';
+
+  AppRouter() : api = MockApi();
+
+  final MockApi api;
+
+  GoRouter get router => GoRouter(
+        initialLocation: home,
+        routes: [
+          GoRoute(
+            path: home,
+            builder: (context, state) => LabTestListScreen(
+              api: api,
+              onLapRequest: () => context.go(labRequestList),
+            ),
+          ),
+
+          //
+          GoRoute(
+            path: labRequestList,
+            builder: (context, state) => LabRequestListScreen(
+              api: api,
+              onAddLabRequest: () => context.go(addRequest),
+              onViewLabRequest: (id) => context.go(viewRequest(id)),
+            ),
+          ),
+
+          //
+          GoRoute(
+            path: addRequest,
+            builder: (context, state) => AddLabRequestScreen(api: api),
+          ),
+
+          //
+          GoRoute(
+            path: '$labRequestList/:id',
+            builder: (context, state) {
+              final id = state.pathParameters["id"]!;
+
+              return LabTestRequestDetailsScreen(
+                labTestRequestId: id,
+                api: api,
+              );
+            },
+          )
+        ],
+      );
 }

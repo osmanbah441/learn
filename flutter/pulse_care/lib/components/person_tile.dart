@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 class PersonTile extends StatelessWidget {
-  final String? imageUrl;
+  final String imageUrl;
   final String name;
 
   const PersonTile({
     super.key,
     required this.name,
-    this.imageUrl,
+    this.imageUrl = '',
   });
 
   Color? get _getBackgroundColor {
-    final shouldGenerateColor = imageUrl == null || imageUrl!.isEmpty;
+    final shouldGenerateColor = imageUrl.isEmpty;
     if (!shouldGenerateColor) return null;
 
     final Random random = Random();
@@ -34,10 +34,8 @@ class PersonTile extends StatelessWidget {
       children: [
         CircleAvatar(
           backgroundColor: _getBackgroundColor,
-          backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
-              ? NetworkImage(imageUrl!)
-              : null,
-          child: imageUrl == null || imageUrl!.isEmpty
+          backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+          child: imageUrl.isEmpty
               ? Text(
                   name[0].toUpperCase(),
                   textAlign: TextAlign.center,
