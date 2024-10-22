@@ -3,7 +3,7 @@ import 'package:pulse_care/components/lab_request_status_chip.dart';
 import 'package:pulse_care/models/lab_test_request.dart';
 
 import '../../api/mock_api.dart';
-import '../../forms/forms.dart';
+import '../../forms/form_configuration_builder.dart';
 
 class LabTestRequestDetailsScreen extends StatelessWidget {
   final String labTestRequestId;
@@ -27,19 +27,22 @@ class LabTestRequestDetailsScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _DisplayRequestInfo(request: request),
-            ...request.requestedTests.map((testId) {
-              final test = api.labTests.firstWhere((t) => t.id == testId);
-              return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: FormConfigurationsBuilder(
-                    selectedTests: [test.formConfiguration],
-                  ));
-            }),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DisplayRequestInfo(request: request),
+              ...request.requestedTests.map((testId) {
+                final test =
+                    api.tests.getAll().firstWhere((t) => t.id == testId);
+                return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: FormConfigurationsBuilder(
+                      selectedTests: [test],
+                    ));
+              }),
+            ],
+          ),
         ),
       ),
     );

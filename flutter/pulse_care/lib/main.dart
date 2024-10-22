@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pulse_care/api/mock_api.dart';
 import 'package:pulse_care/components/theme/theme.dart';
 import 'package:pulse_care/features/add_lab_request/add_lab_request_scree.dart';
+import 'package:pulse_care/features/add_test/add_test_screen.dart';
 import 'package:pulse_care/features/lab_request_list/lab_request_list_screen.dart';
 import 'package:pulse_care/features/lab_test_list/lab_test_list.dart';
 
@@ -29,7 +30,7 @@ final class AppRouter {
   static const home = '/home';
   static const labRequestList = '/lab-request-list';
   static const addRequest = '/add-request';
-  static String viewRequest(String id) => '$labRequestList/$id';
+  static const addTest = '/add-test';
 
   AppRouter() : api = MockApi();
 
@@ -43,6 +44,7 @@ final class AppRouter {
             builder: (context, state) => LabTestListScreen(
               api: api,
               onLapRequest: () => context.go(labRequestList),
+              onCreateNewTest: () => context.go(addTest),
             ),
           ),
 
@@ -52,7 +54,7 @@ final class AppRouter {
             builder: (context, state) => LabRequestListScreen(
               api: api,
               onAddLabRequest: () => context.go(addRequest),
-              onViewLabRequest: (id) => context.go(viewRequest(id)),
+              onViewLabRequest: (id) => context.go('$labRequestList/$id'),
             ),
           ),
 
@@ -73,7 +75,13 @@ final class AppRouter {
                 api: api,
               );
             },
-          )
+          ),
+
+          //
+          GoRoute(
+            path: addTest,
+            builder: (context, state) => AddTestScreen(api: api),
+          ),
         ],
       );
 }

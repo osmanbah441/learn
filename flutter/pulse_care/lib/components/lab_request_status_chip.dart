@@ -9,6 +9,9 @@ class LabRequestStatusChip extends StatelessWidget {
   final LabRequestStatus status;
   final bool onlyIcon;
 
+  const LabRequestStatusChip.icon(LabRequestStatus status, {Key? key})
+      : this(status: status, onlyIcon: true, key: key);
+
   @override
   Widget build(BuildContext context) {
     return onlyIcon
@@ -43,6 +46,7 @@ extension on LabRequestStatus {
     };
 
     return Icon(
+      size: 16,
       iconData,
       color: textColor,
       semanticLabel: 'status',

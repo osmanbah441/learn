@@ -52,7 +52,7 @@ class _LabTestRequestState extends State<_LabTestRequest> {
         doctorId: '5',
         patientId: idController.text,
         requestedAt: DateTime.now(),
-        requestedTests: _selectedTests.map((test) => test.id).toList(),
+        requestedTests: _selectedTests.map((test) => test.id!).toList(),
       );
 
       // Show a success message
@@ -98,9 +98,9 @@ class _LabTestRequestState extends State<_LabTestRequest> {
               Wrap(
                 spacing: 8.0, // Space between chips
                 runSpacing: 8.0,
-                children: widget.api.labTests.map((test) {
+                children: widget.api.tests.getAll().map((test) {
                   return ChoiceChip(
-                    label: Text(test.testName),
+                    label: Text(test.name),
                     selected: _selectedTests.contains(test),
                     onSelected: (selected) {
                       setState(() {

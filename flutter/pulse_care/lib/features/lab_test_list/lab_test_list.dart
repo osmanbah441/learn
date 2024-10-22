@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:pulse_care/api/mock_api.dart';
 import 'package:pulse_care/components/components.dart';
 
-import '../../forms/forms.dart';
 import '../../models/models.dart';
 
 class LabTestListScreen extends StatefulWidget {
-  const LabTestListScreen(
-      {super.key, required this.api, required this.onLapRequest});
+  const LabTestListScreen({
+    super.key,
+    required this.api,
+    required this.onLapRequest,
+    required this.onCreateNewTest,
+  });
 
   final MockApi api;
   final VoidCallback onLapRequest;
+  final VoidCallback onCreateNewTest;
 
   @override
   State<LabTestListScreen> createState() => _LabTestListScreenState();
@@ -22,14 +26,24 @@ class _LabTestListScreenState extends State<LabTestListScreen> {
   @override
   Widget build(BuildContext context) {
     final tests = selectedCategoryIds.isEmpty
-        ? widget.api.labTests
-        : widget.api.labTests
-            .where((test) => selectedCategoryIds.contains(test.categoryId))
+        ? widget.api.tests.getAll()
+        : widget.api.tests
+            .getAll()
+            .where((test) => selectedCategoryIds.contains(test.category))
             .toList();
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMedium = screenWidth >= 768 && screenWidth < 1200;
+    final isLargeScreen = screenWidth >= 1200;
+    final gridCrossAxisCount = isLargeScreen
+        ? 4
+        : isMedium
+            ? 3
+            : 2;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Test Management"),
+        title: const Text("Lab Test"),
         centerTitle: false,
       ),
       body: Padding(
@@ -40,16 +54,17 @@ class _LabTestListScreenState extends State<LabTestListScreen> {
             AnimatedWelcomeMessage(
               filterButton: () => _showFilterDialog(context),
             ),
-            Wrap(
-              runAlignment: WrapAlignment.center,
-              spacing: 16,
-              runSpacing: 16,
-              children: tests.map((test) {
-                return ActionChip(
-                  label: Text(test.testName),
-                  onPressed: () => _showTestDetailDialog(test),
-                );
-              }).toList(),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: gridCrossAxisCount,
+                ),
+                itemCount: tests.length,
+                itemBuilder: (context, index) {
+                  final test = tests[index];
+                  return _buildTestCard(test);
+                },
+              ),
             ),
           ],
         ),
@@ -61,28 +76,44 @@ class _LabTestListScreenState extends State<LabTestListScreen> {
         )
       ],
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddTestDialog(context),
+        onPressed: widget.onCreateNewTest,
         tooltip: 'Create New Test',
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showAddTestDialog(BuildContext context) => showDialog(
-        context: context,
-        builder: (context) => AddFormDialog(
-          onSave: (form) => setState(() {
-            widget.api.addTest(form);
-          }),
+  Widget _buildTestCard(LabTest test) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              test.name,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              test.description,
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.category,
+                color: Colors.lightGreenAccent,
+              ),
+              title: Text(widget.api.tests.getCategoryById(test.category).name),
+            )
+          ],
         ),
-      );
-
-  void _showTestDetailDialog(LabTest test) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return TestDetailDialog(test: test);
-      },
+      ),
     );
   }
 
@@ -93,7 +124,7 @@ class _LabTestListScreenState extends State<LabTestListScreen> {
         return AlertDialog(
           title: const Text('Filter by Category'),
           content: CategoryFilterDialog(
-            categories: widget.api.testCategories,
+            categories: widget.api.tests.getCategories(),
             selectedCategoryIds: selectedCategoryIds,
             onCategorySelected: (ids) {
               setState(() {
@@ -115,7 +146,7 @@ class _LabTestListScreenState extends State<LabTestListScreen> {
 
 // CategoryFilterDialog Widget
 class CategoryFilterDialog extends StatefulWidget {
-  final List<TestCategory> categories;
+  final List<LabTestCategory> categories;
   final List<String> selectedCategoryIds;
   final ValueChanged<List<String>> onCategorySelected;
 
@@ -161,58 +192,6 @@ class _CategoryFilterDialogState extends State<CategoryFilterDialog> {
             },
           );
         }).toList(),
-      ),
-    );
-  }
-}
-
-class TestDetailDialog extends StatelessWidget {
-  const TestDetailDialog({
-    super.key,
-    required this.test,
-  });
-
-  final LabTest test;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return AlertDialog(
-      title: Text(test.testName),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
-        )
-      ],
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Test Parameters:',
-            style: textTheme.labelLarge,
-          ),
-          const SizedBox(height: 8),
-          ...test.formConfiguration.fields.map((field) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${field.label}:',
-                    style: textTheme.bodySmall,
-                  ),
-                  Text(
-                    field.type.name,
-                    style: textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
       ),
     );
   }
